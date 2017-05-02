@@ -5,7 +5,8 @@ import {metrics} from "react-metrics"; // eslint-disable-line import/no-unresolv
 import MetricsConfig from "./metrics.config";
 import Home from "./home";
 import Page from "./page";
-import createHistory from "history/lib/createHashHistory";
+import createHistory from "history/createHashHistory";
+import {parsePath} from "history/PathUtils";
 
 @metrics(MetricsConfig)
 class App extends Component {
@@ -19,9 +20,9 @@ class App extends Component {
         return (
             <div>
                 <ul>
-                    <li><a href={createHref("/")}>Home</a></li>
-                    <li><a href={createHref("/page/A")}>Page A</a></li>
-                    <li><a href={createHref("/page/B")}>Page B</a></li>
+                    <li><a href={createHref(parsePath("/"))}>Home</a></li>
+                    <li><a href={createHref(parsePath("/page/A"))}>Page A</a></li>
+                    <li><a href={createHref(parsePath("/page/B"))}>Page B</a></li>
                 </ul>
                 {this.props.children && React.cloneElement(this.props.children, {...this.props})}
             </div>
@@ -38,21 +39,23 @@ class AppContainer extends Component {
             "/page/A": {component: Page, params: {id: "A"}},
             "/page/B": {component: Page, params: {id: "B"}}
         };
-        this.state = {
-            routeComponent: this.routes["/"].component
-        };
+        this.state = this.getRoute(this.history.location);
     }
 
     componentWillMount() {
         this.unlisten = this.history.listen(location => {
-            const route = this.routes[location.pathname] || this.routes["/"];
-            const {component: routeComponent, params} = route;
-            this.setState({routeComponent, location, params});
+            this.setState(this.getRoute(location));
         });
     }
 
     componentWillUnmount() {
         this.unlisten();
+    }
+
+    getRoute(location) {
+        const route = this.routes[location.pathname] || this.routes["/"];
+        const {component: routeComponent, params} = route;
+        return {routeComponent, location, params};
     }
 
     render() {

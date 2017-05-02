@@ -1,10 +1,10 @@
 /* eslint-disable react/no-multi-comp */
 import React, {Component, PropTypes} from "react";
 import ReactDOM from "react-dom";
-import {Router, Route, IndexRoute, Link, IndexLink, useRouterHistory} from "react-router";
-import createHistory from "history/lib/createHashHistory";
+import {Router, Route, Switch, Link, withRouter} from "react-router-dom";
 import {createStore, applyMiddleware} from "redux";
 import {Provider, connect} from "react-redux";
+import createHistory from "history/createHashHistory";
 import counter from "./counter";
 import {inclement, declement, routeChange} from "./action";
 import metricsMiddleware from "./metricsMiddleware";
@@ -27,8 +27,9 @@ history.listen(location => {
         prevLocation = location;
     }
 });
-const appHistory = useRouterHistory(createHistory)();
+store.dispatch(routeChange(history.location));
 
+@withRouter
 @connect(
     state => ({
         counterA: state.counterA,
@@ -36,6 +37,11 @@ const appHistory = useRouterHistory(createHistory)();
     })
 )
 class Application extends Component {
+    constructor(props) {
+        super(props);
+        this.onInclementClick = this.onInclementClick.bind(this);
+        this.onDeclementClick = this.onDeclementClick.bind(this);
+    }
     static propTypes = {
         children: PropTypes.node,
         dispatch: PropTypes.func.isRequired
@@ -50,15 +56,21 @@ class Application extends Component {
         return (
             <div>
                 <ul>
-                    <li><IndexLink to="/">Home</IndexLink></li>
+                    <li><Link to="/">Home</Link></li>
                     <li><Link to="/page/A">Page A</Link></li>
                     <li><Link to="/page/B">Page B</Link></li>
                 </ul>
-                {this.props.children && React.cloneElement(this.props.children, {
-                    ...this.props,
-                    onInclementClick: this.onInclementClick.bind(this),
-                    onDeclementClick: this.onDeclementClick.bind(this)
-                })}
+                <Switch>
+                    <Route exact path="/" component={Home}/>
+                    <Route path="/page/:id" render={(props) => (
+                        <Page
+                            {...this.props}
+                            {...props}
+                            onInclementClick={this.onInclementClick}
+                            onDeclementClick={this.onDeclementClick}
+                        />
+                    )} />
+                </Switch>
             </div>
         );
     }
@@ -82,7 +94,7 @@ class Page extends Component {
     };
 
     render() {
-        const {params, counterA, counterB, onInclementClick, onDeclementClick} = this.props;
+        const {match: {params}, counterA, counterB, onInclementClick, onDeclementClick} = this.props;
         return (
             <div>
                 <h1>Page {params.id}</h1>
@@ -100,11 +112,8 @@ class Page extends Component {
 ReactDOM.render((
     <div>
         <Provider store={store}>
-            <Router history={appHistory}>
-                <Route path="/" component={Application}>
-                    <IndexRoute component={Home}/>
-                    <Route path="/page/:id" component={Page}/>
-                </Route>
+            <Router history={history}>
+                <Application />
             </Router>
         </Provider>
     </div>

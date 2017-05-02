@@ -9,7 +9,7 @@ class Page extends React.Component {
     }
 
     render() {
-        const {params} = this.props;
+        const {match: {params}} = this.props;
         const listItem = Array.from("123").map(key => (
             <li
                 key={key}
