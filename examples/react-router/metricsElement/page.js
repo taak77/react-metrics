@@ -5,7 +5,9 @@ import {MetricsElement} from "react-metrics"; // eslint-disable-line import/no-u
 
 class Page extends React.Component {
     static propTypes = {
-        params: PropTypes.object
+        match: PropTypes.shape({
+            params: PropTypes.object
+        })
     }
 
     render() {

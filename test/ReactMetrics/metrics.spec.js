@@ -1,9 +1,8 @@
 /* eslint-disable react/no-multi-comp, max-nested-callbacks, react/prop-types, no-empty, padded-blocks */
 import React from "react";
 import ReactDOM from "react-dom";
-import createHistory from "history/lib/createMemoryHistory";
+import createHistory from "history/createMemoryHistory";
 import {Router, Route} from "react-router";
-import execSteps from "../execSteps";
 import ReactTestUtils from "react-addons-test-utils";
 import metrics from "../../src/react/metrics";
 import createMetrics, {isMetrics, Metrics} from "../../src/core/createMetrics";
@@ -77,12 +76,14 @@ describe("metrics", () => {
         tree.componentWillUnmount();
     });
 
-    it("throws when added to more than one component", done => {
+    it("throws when added to more than one component", () => {
+        const history = createHistory();
+
         @metrics(metricsConfig)
         class Application extends React.Component {
             static displayName = "TestApplication";
             render() {
-                return (<div>{this.props.children}</div>);
+                return (<div><Route path="/page" component={Page}/></div>);
             }
         }
 
@@ -94,20 +95,15 @@ describe("metrics", () => {
             }
         }
 
-        const execNextStep = function () {
-            this.history.pushState(null, "/page");
-            done();
-        };
-
         expect(() => {
             ReactDOM.render((
-                <Router history={createHistory("/")} onUpdate={execNextStep}>
-                    <Route path="/" component={Application}>
-                        <Route path="/page" component={Page}/>
-                    </Route>
+                <Router history={history}>
+                    <Route path="/" component={Application} />
                 </Router>
-            ), node);
-        }).to.throw("metrics should only be added once to the root level component. You have added to both TestApplication and TestPage");
+            ), node, () => {
+                history.push("/page");
+            });
+        }).to.throw("`metrics` should only be added once to the root level component. You have added to both TestApplication and TestPage.");
     });
 
     it("should make 'metrics' context available", () => {
@@ -164,7 +160,7 @@ describe("metrics", () => {
             static displayName = "Application";
 
             render() {
-                return (<div>{this.props.children}</div>);
+                return (<div><Route path="/page" component={Page}/></div>);
             }
         }
 
@@ -172,19 +168,7 @@ describe("metrics", () => {
         const stub = sinon.stub(Application.prototype, "_getMetrics", () => {
             return metricsMock;
         });
-
-        const steps = [
-            function () {
-                expect(pageView.calledOnce).to.be.false;
-                this.history.pushState(null, "/page");
-            },
-            function () {
-                expect(pageView.calledOnce).to.be.true;
-                stub.restore();
-                pageView.restore();
-                done();
-            }
-        ];
+        const history = createHistory();
 
         class Page extends React.Component {
             static displayName = "Page";
@@ -195,6 +179,10 @@ describe("metrics", () => {
 
             componentDidMount() {
                 this.context.metrics.pageView();
+                expect(pageView.calledOnce).to.be.true;
+                stub.restore();
+                pageView.restore();
+                done();
             }
 
             static willTrackPageView() {
@@ -206,15 +194,14 @@ describe("metrics", () => {
             }
         }
 
-        const execNextStep = execSteps(steps, done);
-
         ReactDOM.render((
-            <Router history={createHistory("/")} onUpdate={execNextStep}>
-                <Route path="/" component={Application}>
-                    <Route path="/page" component={Page}/>
-                </Route>
+            <Router history={history}>
+                <Route path="/" component={Application} />
             </Router>
-        ), node, execNextStep);
+        ), node, () => {
+            expect(pageView.calledOnce).to.be.false;
+            history.push("/page");
+        });
     });
 
     it("should not throw invariant error when `enabled` is set to false in metrics config and pageView is not defined.", done => {

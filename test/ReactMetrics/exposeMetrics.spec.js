@@ -1,7 +1,7 @@
 /* eslint-disable react/no-multi-comp, max-nested-callbacks, react/prop-types, no-empty, padded-blocks */
 import React from "react";
 import ReactDOM from "react-dom";
-import createHistory from "history/lib/createMemoryHistory";
+import createHistory from "history/createMemoryHistory";
 import {Router, Route} from "react-router";
 import metrics from "../../src/react/metrics";
 import exposeMetrics, {getMountedInstances} from "../../src/react/exposeMetrics";
@@ -67,10 +67,12 @@ describe("exposeMetrics", () => {
     });
 
     it("should provide 'willTrackPageView' static method to route handler component", (done) => {
+        const history = createHistory();
+
         @metrics(MetricsConfig)
         class Application extends React.Component {
             render() {
-                return (<div>{this.props.children}</div>);
+                return (<div><Route path="/page/:id" component={Page}/></div>);
             }
         }
 
@@ -89,21 +91,21 @@ describe("exposeMetrics", () => {
         }
 
         ReactDOM.render((
-            <Router history={createHistory("/")}>
-                <Route path="/" component={Application}>
-                    <Route path="/page/:id" component={Page}/>
-                </Route>
+            <Router history={history}>
+                <Route path="/" component={Application} />
             </Router>
         ), node, function () {
-            this.history.pushState(null, "/page/1");
+            history.push("/page/1");
         });
     });
 
     it("should support partial application", (done) => {
+        const history = createHistory();
+
         @metrics(MetricsConfig)
         class Application extends React.Component {
             render() {
-                return (<div>{this.props.children}</div>);
+                return (<div><Route path="/page/:id" component={Page}/></div>);
             }
         }
 
@@ -121,13 +123,11 @@ describe("exposeMetrics", () => {
         }
 
         ReactDOM.render((
-            <Router history={createHistory("/")}>
-                <Route path="/" component={Application}>
-                    <Route path="/page/:id" component={Page}/>
-                </Route>
+            <Router history={history}>
+                <Route path="/" component={Application} />
             </Router>
         ), node, function () {
-            this.history.pushState(null, "/page/1");
+            history.push("/page/1");
         });
     });
 

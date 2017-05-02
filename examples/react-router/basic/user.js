@@ -5,7 +5,9 @@ import matchPath from "react-router/matchPath";
 @exposeMetrics
 class User extends React.Component {
     static propTypes = {
-        params: PropTypes.object
+        match: PropTypes.shape({
+            params: PropTypes.object
+        })
     };
 
     static willTrackPageView(routeState) {

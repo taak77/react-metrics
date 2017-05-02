@@ -86,7 +86,9 @@ class Home extends Component {
 
 class Page extends Component {
     static propTypes = {
-        params: PropTypes.object,
+        match: PropTypes.shape({
+            params: PropTypes.object
+        }),
         onInclementClick: PropTypes.func,
         onDeclementClick: PropTypes.func,
         counterA: PropTypes.number,
