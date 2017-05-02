@@ -7,7 +7,6 @@ import {metrics, MetricsElement} from "react-metrics"; // eslint-disable-line im
 import MetricsConfig from "./metrics.config";
 import Home from "./home";
 import Page from "./page";
-import locationAware from "../../locationAware/locationAware";
 
 const history = createHistory();
 
@@ -36,7 +35,7 @@ class App extends Component {
         );
     }
 }
-const DecoratedApp = locationAware(metrics(MetricsConfig, {useTrackBinding: false, attributePrefix: "data-tracking"})(App));
+const DecoratedApp = metrics(MetricsConfig, {useTrackBinding: false, attributePrefix: "data-tracking"})(App);
 
 class NotFound extends Component {
     render() {
@@ -48,6 +47,6 @@ class NotFound extends Component {
 
 ReactDOM.render((
     <Router history={history}>
-        <DecoratedApp />
+        <Route component={DecoratedApp} />
     </Router>
 ), document.getElementById("example"));

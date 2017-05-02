@@ -8,7 +8,6 @@ import Home from "./home";
 import AsyncPageView from "./async-page-view";
 import ManualPageView from "./manual-page-view";
 import User from "./user";
-import locationAware from "../../locationAware/locationAware";
 
 class NotFound extends Component {
     render() {
@@ -56,10 +55,10 @@ class App extends Component {
         );
     }
 }
-const DecoratedApp = locationAware(metrics(MetricsConfig)(App));
+const DecoratedApp = metrics(MetricsConfig)(App);
 
 ReactDOM.render((
     <Router>
-        <DecoratedApp />
+        <Route component={DecoratedApp} />
     </Router>
 ), document.getElementById("example"));
